@@ -78,18 +78,46 @@ class ApplicantRegistration extends Component
 
     public function nextStep()
     {
-        if ($this->step === 1) {
-            $this->validateStepOne();
+        if ($this->step === 1 && (string)$this->has_applied === '0') {
+            $this->validate([
+                'transaction_number' => 'required',
+                'amount' => 'required|numeric',
+                'bank_name' => 'required',
+                'payment_date' => 'required|date',
+                // 'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            ]);
         }
-    
+        if ($this->step === 2) {
+            if (empty($this->experiences) || !array_filter($this->experiences, function($exp) {
+                return !empty($exp['institution']) && !empty($exp['designation']) && !empty($exp['from_date']) && !empty($exp['to_date']);
+            })) {
+                $this->dispatch('swal');
+                return;
+            }
+        }
         $this->step++;
-    }    
-
+    }
     public function previousStep()
     {
         $this->step--;
     }
-
+    public function experienceValidationRules(): array
+    {
+        $rules = [
+            'experiences' => 'required|array|min:1',
+            'experiences.*.institution' => 'required|string',
+            'experiences.*.designation' => 'required|string',
+            'experiences.*.from_date' => 'required|date',
+            'experiences.*.to_date' => 'required|date|after_or_equal:experiences.*.from_date',
+        ];
+    
+        $messages = [
+            'experiences.min' => 'You must add at least one work experience.',
+        ];
+    
+        return [$rules, $messages];
+    }
+    
     public function addExperience()
     {
         $this->experiences[] = [
@@ -145,17 +173,6 @@ class ApplicantRegistration extends Component
         }
         return $rules;
     }
-
-    public function experienceValidationRules(): array
-    {
-        return [
-            'experiences.*.institution' => 'required|string',
-            'experiences.*.designation' => 'required|string',
-            'experiences.*.from_date' => 'required|date',
-            'experiences.*.to_date' => 'required|date|after_or_equal:experiences.*.from',
-        ];
-    }
-
     public function personalInfoValidationRules(): array
     {
         return [];
@@ -173,8 +190,10 @@ class ApplicantRegistration extends Component
             DB::transaction(function () {
                 $user = auth()->user();
                 $ack = $this->generateAckNumber();
-                $user->update(['ack_no' => $ack,
-            'enrollment_status' => 'enrolled']);
+                $user->update([
+                    'ack_no' => $ack,
+                    'enrollment_status' => 'enrolled'
+                ]);
 
                 if ((string) $this->has_applied === '0') {
                     PaymentDetail::create([

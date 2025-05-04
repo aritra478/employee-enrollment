@@ -57,25 +57,28 @@
         <div class="space-y-6">
             <h2 class="text-lg font-semibold text-gray-800">Work Experience</h2>
             <div class="mb-4 border p-4 rounded bg-gray-100">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                    <div>
-                        <span><strong>Name:</strong> {{ auth()->user()->full_name }}</span><br>
-                        <span><strong>DOB:</strong> {{ auth()->user()->dob->format('d-m-Y') }}</span><br>
-                        <span><strong>Age:</strong>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    <!-- Left Side -->
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <span><strong>Name:</strong> {{ auth()->user()->full_name }}</span>
+                        <span><strong>DOB:</strong> {{ auth()->user()->dob->format('d-m-Y') }}</span>
+                        <span>
+                            <strong>Age:</strong>
                             {{ now()->diff(auth()->user()->dob)->y }} years
                             {{ now()->diff(auth()->user()->dob)->m }} months
                             {{ now()->diff(auth()->user()->dob)->d }} days
-                        </span><br>
+                        </span>
                         <span><strong>Gender:</strong> {{ auth()->user()->gender }}</span>
                     </div>
-                    <div>
-                        <span><strong>Category:</strong> {{ auth()->user()->category }}</span><br>
-                        <span><strong>Mobile:</strong> {{ auth()->user()->mobile }}</span><br>
+
+                    <!-- Right Side -->
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <span><strong>Category:</strong> {{ auth()->user()->category }}</span>
+                        <span><strong>Mobile:</strong> {{ auth()->user()->mobile }}</span>
                         <span><strong>Email:</strong> {{ auth()->user()->email }}</span>
                     </div>
                 </div>
             </div>
-
             @foreach ($experiences as $index => $experience)
                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4 border p-4 rounded shadow-sm bg-gray-50">
                     <x-input-array label="Institution" model="experiences.{{ $index }}.institution" />
@@ -115,6 +118,14 @@
             <h2 class="text-lg font-semibold text-gray-800">Document Upload</h2>
 
             @foreach ($documentFields as $key => $label)
+                @if ($key === 'bed' && auth()->user()->subject !== 'Agriculture')
+                    @continue
+                @endif
+
+                @if ($key === 'employment2' && count($experiences) < 2)
+                    @continue
+                @endif
+
                 <div>
                     <label class="block text-sm font-medium">{{ $label }}</label>
                     <input type="file" wire:model="documents.{{ $key }}"
@@ -128,6 +139,7 @@
             <div wire:loading wire:target="documents" class="text-blue-600 text-sm">Uploading documents, please wait...
             </div>
         </div>
+
     @endif
 
     @if ($step === 4)
@@ -135,11 +147,7 @@
             <h2 class="text-lg font-semibold text-gray-800">Final Preview</h2>
 
             <div class="bg-gray-100 p-4 rounded text-sm space-y-2">
-                <p><strong>Full Name:</strong> {{ $userData['full_name'] ?? '-' }}</p>
-                <p><strong>Subject:</strong> {{ $userData['subject'] ?? '-' }}</p>
-                <p><strong>Gender:</strong> {{ $userData['gender'] ?? '-' }}</p>
-                <p><strong>Category:</strong> {{ $userData['category'] ?? '-' }}</p>
-                <p><strong>DOB:</strong> {{ $userData['dob'] ?? '-' }}</p>
+                <p><strong>Applied Subject:</strong> {{ auth()->user()->subject ?? '-' }}</p>
                 <p><strong>Experience:</strong></p>
                 <ul class="ml-4 list-disc">
                     @foreach ($experiences as $exp)
@@ -167,4 +175,17 @@
             {{ $step === 4 ? '📤 Submit' : '➡ Next' }}
         </button>
     </div>
+    <script>
+        window.addEventListener('swal', event => {
+            Swal.fire({
+                icon: 'warning',
+                text: 'Please fill in at least one experience detail.',
+                title: 'No Experience Found',
+                showConfirmButton: true,
+                timer: 5000,
+                timerProgressBar: true,
+                willClose: () => {}
+            });
+        });
+    </script>
 </div>

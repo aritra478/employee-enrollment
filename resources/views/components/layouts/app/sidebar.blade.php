@@ -3,7 +3,7 @@
 
 <head>
     @include('partials.head')
-
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         .nav-item-active {
             background-color: rgba(59, 130, 246, 0.15);
@@ -76,8 +76,10 @@
                 @auth
                     @if (auth()->user()->position !== 'admin')
                         <li>
-                            <a href="{{ route('application.form') }}"
-                                class="nav-item-active text-blue-600 hover:text-blue-700 block px-4 py-2 rounded-lg">
+                            <a href="{{ auth()->user()->enrollment_status === 'enrolled' ? '#' : route('application.form') }}"
+                                class="nav-item-active block px-4 py-2 rounded-lg 
+                                  {{ auth()->user()->enrollment_status === 'enrolled' ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-700' }}"
+                                {{ auth()->user()->enrollment_status === 'enrolled' ? 'aria-disabled=true' : '' }}>
                                 Application Form
                             </a>
                         </li>
@@ -86,7 +88,8 @@
             </ul>
         </div>
         @auth
-            <div x-data="{ open: false }" class="relative text-sm font-semibold text-gray-700 dark:text-gray-300" style="margin-top: 100%; padding-left: 10%">
+            <div x-data="{ open: false }" class="relative text-sm font-semibold text-gray-700 dark:text-gray-300"
+                style="margin-top: 100%; padding-left: 10%">
                 <div class="flex items-center space-x-2 cursor-pointer" @click="open = !open" style="gap: 30%">
                     <div class="profile-initials">
                         {{ auth()->user()->initials() }}
@@ -131,6 +134,7 @@
     </div>
 
     @fluxScripts
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

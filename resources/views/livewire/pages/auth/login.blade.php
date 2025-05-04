@@ -116,6 +116,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
                 <x-form.error name="password_confirmation" />
             </div>
         </x-form.field>
+        <x-password-policy />
         {{-- @if (Route::has('password.request'))
             <div class="text-sm text-right" style="margin-left: 60%">
                 <flux:link :href="route('password.request')" wire:navigate class="text-indigo-600 hover:underline">
