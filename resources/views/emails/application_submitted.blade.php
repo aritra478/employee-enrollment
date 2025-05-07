@@ -1,11 +1,14 @@
 @component('mail::message')
-# Hello {{ $user->name }}
+# Application Submitted
+
+Dear {{ $user->name }},
 
 Your application has been submitted successfully.
 
 **Acknowledgement No:** {{ $user->acknowledgement_no }}
-
-Please find the attached PDF copy of your application.
+@component('mail::button', ['url' => $pdfUrl])
+Download Acknowledgement PDF
+@endcomponent
 
 Thanks,<br>
 {{ config('app.name') }}

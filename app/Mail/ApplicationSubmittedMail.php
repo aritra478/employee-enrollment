@@ -14,19 +14,17 @@ class ApplicationSubmittedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $user;
+    public $user, $pdfUrl;
 
-    public function __construct($user) { $this->user = $user; }
+    public function __construct($user, $pdfUrl)
+    {
+        $this->user = $user;
+        $this->pdfUrl = $pdfUrl;
+    }
 
     public function build()
     {
-        $pdf = Pdf::loadView('pdf.application', ['user' => $this->user]);
-
         return $this->subject('Application Submitted Successfully')
-            ->markdown('emails.application_submitted')
-            ->attachData($pdf->output(), 'application.pdf', [
-                'mime' => 'application/pdf',
-            ]);
+            ->markdown('emails.application_submitted');
     }
 }
-

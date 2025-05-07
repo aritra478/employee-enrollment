@@ -214,8 +214,9 @@ class ApplicantRegistration extends Component
                 $pdf = Pdf::loadView('pdf.acknowledgement', ['user' => $user]);
                 $pdfPath = 'acknowledgements/' . $ack . '.pdf';
                 Storage::disk('public')->put($pdfPath, $pdf->output());
+                $pdfUrl = asset('storage/' . $pdfPath);
 
-                // Mail::to($user->email)->send(new \App\Mail\ApplicationSubmittedMail($user));
+                Mail::to($user->email)->send(new \App\Mail\ApplicationSubmittedMail($user, $pdfUrl));
             });
 
             $this->reset();
