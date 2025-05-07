@@ -28,6 +28,12 @@ class ApplicantRegistration extends Component
     public $payment_date;
     public $receipt;
 
+    public function mount($applied_before = null)
+    {
+        $this->has_applied = auth()->user()->applied_before == 1 ? '1' : '0';
+        $this->updatedHasApplied($this->has_applied);
+    }
+
     public array $documentFields = [
         'photo' => 'Photo',
         'signature' => 'Signature',
@@ -84,14 +90,15 @@ class ApplicantRegistration extends Component
                 'amount' => 'required|numeric',
                 'bank_name' => 'required',
                 'payment_date' => 'required|date',
-                // 'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             ]);
         }
         if ($this->step === 2) {
-            if (empty($this->experiences) || !array_filter($this->experiences, function($exp) {
+            if (empty($this->experiences) || !array_filter($this->experiences, function ($exp) {
                 return !empty($exp['institution']) && !empty($exp['designation']) && !empty($exp['from_date']) && !empty($exp['to_date']);
             })) {
                 $this->dispatch('swal');
+                $rulesAndMessages = $this->experienceValidationRules();
+                $this->validate($rulesAndMessages['rules'], $rulesAndMessages['messages']);
                 return;
             }
         }
@@ -103,21 +110,19 @@ class ApplicantRegistration extends Component
     }
     public function experienceValidationRules(): array
     {
-        $rules = [
-            'experiences' => 'required|array|min:1',
-            'experiences.*.institution' => 'required|string',
-            'experiences.*.designation' => 'required|string',
-            'experiences.*.from_date' => 'required|date',
-            'experiences.*.to_date' => 'required|date|after_or_equal:experiences.*.from_date',
+        return [
+            'rules' => [
+                'experiences' => 'required|array|min:1',
+                'experiences.*.institution' => 'required|string',
+                'experiences.*.designation' => 'required|string',
+                'experiences.*.from_date' => 'required|date',
+                'experiences.*.to_date' => 'required|date|after_or_equal:experiences.*.from_date',
+            ],
+            'messages' => [
+                'experiences.min' => 'You must add at least one work experience.',
+            ],
         ];
-    
-        $messages = [
-            'experiences.min' => 'You must add at least one work experience.',
-        ];
-    
-        return [$rules, $messages];
     }
-    
     public function addExperience()
     {
         $this->experiences[] = [
@@ -160,11 +165,6 @@ class ApplicantRegistration extends Component
         }
     }
 
-    public function updated($propertyName)
-    {
-        $this->validateOnly($propertyName, $this->documentValidationRules());
-    }
-
     public function documentValidationRules(): array
     {
         $rules = [];
@@ -173,19 +173,8 @@ class ApplicantRegistration extends Component
         }
         return $rules;
     }
-    public function personalInfoValidationRules(): array
-    {
-        return [];
-    }
-
     public function submitFinal()
     {
-        $this->validate(array_merge(
-            $this->documentValidationRules(),
-            $this->experienceValidationRules(),
-            $this->personalInfoValidationRules()
-        ));
-
         try {
             DB::transaction(function () {
                 $user = auth()->user();
@@ -226,7 +215,7 @@ class ApplicantRegistration extends Component
                 $pdfPath = 'acknowledgements/' . $ack . '.pdf';
                 Storage::disk('public')->put($pdfPath, $pdf->output());
 
-                Mail::to($user->email)->send(new \App\Mail\ApplicationSubmittedMail($user, $pdfPath));
+                // Mail::to($user->email)->send(new \App\Mail\ApplicationSubmittedMail($user));
             });
 
             $this->reset();

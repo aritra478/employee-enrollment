@@ -11,7 +11,7 @@ class PdfController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if ($user->form_status !== 'approved') {
+        if ($user->form_status == 'pending' ) {
             abort(403, 'Only approved forms can download acknowledgement.');
         }
 

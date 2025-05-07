@@ -58,4 +58,20 @@ new #[Layout('layouts.guest')] class extends Component
             {{ __('Log Out') }}
         </button>
     </div>
+    @if(session('email_unverified'))
+    <script>
+        window.addEventListener('swal', event => {
+            Swal.fire({
+                icon: 'warning',
+                text: 'Please fill in at least one experience detail.',
+                title: 'No Experience Found',
+                showConfirmButton: true,
+                timer: 5000,
+                timerProgressBar: true,
+                willClose: () => {}
+            });
+        });
+    </script>
+@endif
+
 </div>
